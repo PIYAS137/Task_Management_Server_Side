@@ -31,32 +31,41 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-
-
-
-
     const taskCollection = client.db("taskmanagement").collection("taskCollection");
     const userCollection = client.db("taskmanagement").collection("userCollection");
 
 
+    // create new task 
+    app.post('/task', async (req, res) => {
+      const data = req.body;
+      const result = await taskCollection.insertOne(data);
+      res.send(result);
+    })
 
+    // get all task
+    app.get('/task', async (req, res) => {
+      const query = { email: req.query.email };
+      const result = await taskCollection.find(query).toArray();
+      res.send(result);
+    })
 
-    app.post('/task',async(req,res)=>{
-        const data = req.body;
-        const query = {email: data.email}
-        const isExist = await taskCollection.findOne(query);
-        if(isExist){
-            return res.send({message: "AH"})
-        }else{
-            const result = await taskCollection.insertOne(data);
-            res.send(result);
+    // update task 
+    app.patch('/task', async (req, res) => {
+      const data = req.body;
+      const query = { _id: new ObjectId(data.id) };
+      const updatedDoc = {
+        $set: {
+          status: data.status
         }
+      }
+      const result = await taskCollection.updateOne(query, updatedDoc);
+      res.send(result);
     })
 
 
 
     // create user
-    app.post('/user',async(req,res)=>{
+    app.post('/user', async (req, res) => {
       const data = req.body;
       const result = await userCollection.insertOne(data);
       res.send(result);
@@ -82,10 +91,10 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req,res)=>{
-    res.send("Server is running ~")
+app.get('/', (req, res) => {
+  res.send("Server is running ~")
 });
 
-app.listen(port,()=>{
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 })
