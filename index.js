@@ -62,6 +62,32 @@ async function run() {
       res.send(result);
     })
 
+    // delete task
+    app.delete('/task/:sid',async(req,res)=>{
+      const id = req.params.sid;
+      const query = {_id : new ObjectId(id)};
+      const result = await taskCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    // edit task
+    app.put('/task/:sid',async(req,res)=>{
+      const id = req.params.sid;
+      const data = req.body;
+      const filter = {_id: new ObjectId(id)}
+      console.log(data);
+      const updatedDoc = {
+        $set:{
+          title: data.title,
+          deadline: data.deadline,
+          description:data.description,
+          priority: data.priority
+        }
+      }
+      const result = await taskCollection.updateOne(filter,updatedDoc);
+      res.send(result);
+    })
+
 
 
     // create user
