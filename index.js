@@ -29,7 +29,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const taskCollection = client.db("taskmanagement").collection("taskCollection");
     const userCollection = client.db("taskmanagement").collection("userCollection");
@@ -63,28 +63,27 @@ async function run() {
     })
 
     // delete task
-    app.delete('/task/:sid',async(req,res)=>{
+    app.delete('/task/:sid', async (req, res) => {
       const id = req.params.sid;
-      const query = {_id : new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await taskCollection.deleteOne(query);
       res.send(result);
     })
 
     // edit task
-    app.put('/task/:sid',async(req,res)=>{
+    app.put('/task/:sid', async (req, res) => {
       const id = req.params.sid;
       const data = req.body;
-      const filter = {_id: new ObjectId(id)}
-      console.log(data);
+      const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
-        $set:{
+        $set: {
           title: data.title,
           deadline: data.deadline,
-          description:data.description,
+          description: data.description,
           priority: data.priority
         }
       }
-      const result = await taskCollection.updateOne(filter,updatedDoc);
+      const result = await taskCollection.updateOne(filter, updatedDoc);
       res.send(result);
     })
 
@@ -93,8 +92,23 @@ async function run() {
     // create user
     app.post('/user', async (req, res) => {
       const data = req.body;
-      const result = await userCollection.insertOne(data);
-      res.send(result);
+      const query = { email: data.email };
+      const isExist = await userCollection.findOne(query);
+      if (!isExist) {
+        const result = await userCollection.insertOne(data);
+        res.send(result);
+      }
+    })
+
+
+    // get peoples rev
+    app.get('/stat',async(req,res)=>{
+      const allData = await userCollection.find({}).toArray();
+      console.log(allData);
+      const webDev = allData.filter(one=>one.profession == 'web developer');
+      const student = allData.filter(one=>one.profession =='student');
+      const teacher = allData.filter(one=>one.profession == 'teacher'); 
+      res.send({webDev,student,teacher})
     })
 
 
@@ -103,8 +117,8 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
